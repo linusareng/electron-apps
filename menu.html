@@ -19,9 +19,7 @@
     </div>
 
     <header>
-        <div class="background-image">
-            <img src="headerimage.svg"/>
-        </div>
+        <div class="background-image"></div>
         <div class="logo">
             <img onclick="javascript:window.location.reload();" src="resources/SRA-Logo-128x128.png" alt="logo" />
         </div>
@@ -29,6 +27,12 @@
         <div class="header-title" onclick="javascript:window.location.reload();">
             Simracingapps <span style="opacity:.5;">//</span> LA
             <!-- TODO: Add byline, possibly edit app name -->
+        </div>
+
+        <div class="header-meta">
+            <a id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings <i class="material-icons">tune</i></span></span></a>
+            <!-- TODO: we only need one helper page, but set it up -->
+            <a href="#">Info <i class="material-icons">person_pin</i></a>
         </div>
     </header>
 
@@ -42,16 +46,28 @@
     </nav>
 
     <section class="listing">
-        <div class="configurations">
+        <div>
+            <div style="display:none;">
+                <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a><br />
+                <span id="version" class="version"></span><br />
+                <span id="electron_version" class="version"></span><br />
+                <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
+                <a id="copyright" class="copyright" target="_blank">Copyright</a><br />
+                <a id="license" class="license" target="_blank">License</a><br />
+                <a id="notice" class="notice" target="_blank">NOTICE</a><br />
+                <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
+                <span id="SRAurl"></span>
+            </div>
             <form id="SRAconfigurationForm" class="SRAconfigurationForm">
-                <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
-                    <option value="default">default</option>
-                </select>
                 <input oninput="javascript:updateButtons();" type="text" id="SRAconfiguration" name="configuration" value="default">
                 <input onclick="javascript:saveConfiguration();" type="button" disabled="true" value="Create" name="save" id="save" />
                 <input onclick="javascript:deleteConfiguration();" type="button" disabled="true" value="Delete" name="delete" id="delete" />
                 <input onclick="javascript:hideWindows();" type="button" value="Hide All" name="hide" id="hide" />
                 <input onclick="javascript:showWindows();" type="button" value="Show All" name="show" id="show" />
+                <br />
+                <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
+                    <option value="default">Default</option>
+                </select>
             </form>
         </div>
         <table>
@@ -61,7 +77,7 @@
                         <tr><td>
                             <div class="spinner"></div>
                             <div class="message-notice">The good stuff is loading</div>
-                        </td></tr>
+                    </td></tr>
                     </tbody>
                 </table>
             </tbody>
@@ -74,7 +90,7 @@
                 </tr>
             </tfoot>
         </table>
-        https://codepen.io/linusa/pen/YzWwYaE
+
     </section>
 
     <script type="text/javascript">
@@ -291,7 +307,7 @@
 
             //now translate the buttons
             if (!document.getElementById("SRAconfigurationForm").innerHTML.startsWith(serverVersion.translations.CONFIGURATION)) {
-                document.getElementById("SRAconfigurationForm").innerHTML = (serverVersion.translations.CONFIGURATION || 'Configuration') + ": <br />" + document.getElementById("SRAconfigurationForm").innerHTML;
+                document.getElementById("SRAconfigurationForm").innerHTML = (serverVersion.translations.CONFIGURATION || 'Configuration') + " " + document.getElementById("SRAconfigurationForm").innerHTML;
 
                 //for some reason updating the innerHTML of the form looses the listener
                 //so put it back.
@@ -314,25 +330,18 @@
 
             checkForUpdate();
 
-
-            // HERE WE GO, CREATE A LIST OF ALL APPS, WIDGETS, DOCS & STUFF
+            // is this it?
             var listingsTable = document.getElementById("listingsTable");
             listingsTable.setAttribute('class', 'table-items' + ' table-linus');
 
             var listingsBody = document.getElementById("listingsBody");
             listingsBody.parentElement.removeChild(listingsBody);
 
-
-            // THE INSERTION POINT IS ABOVE. NOW.
-            // HERE STARTS THE MAYHEM, FIX IT.
-            // REPLACE TBODY WITH AN UL.
+            // we've found the insertion point, remove and insert a new one
             listingsBody = document.createElement("tbody");
             listingsBody.setAttribute('id', 'listingsBody');
 
-
-            // FIRST, LET'S PRINT OUT A HEADLINE FOR THIS SECTION.
-            // THESE ARE APPS, WIDGETS, DOCS. POSSIBLY FAVORITES.
-            // REPLACE TR WITH LI HEADER CLASS. REMOVE TD'S.
+            // print out headers, that is APPS, WIDGETS and stuff
             for (var headeridx in items.headers) {
                 var header = items.headers[headeridx];
                 if (items[header].length > 0) {
@@ -351,8 +360,6 @@
                     listingsBody.appendChild(tr_header);
 
                     // For each HEADER, print out ITEMS, this is the main part, the above shit I can handle
-                    // NOW, FOR EACH HEADER PRINT OUT ITEMS THAT SITS BELOW IT.
-                    // REPLACE TR WITH AN LI ITEM CLASS.
                     for (var itemsidx in items[header]) {
                         var item = items[header][itemsidx];
 
@@ -360,7 +367,6 @@
                         listingsBody.appendChild(tr_item);
                         tr_item.setAttribute('class', 'item');
 
-                        // FIRST COLUMN HAS IMAGE.
                         var td_icon = document.createElement('td');
                         tr_item.appendChild(td_icon);
                         td_icon.setAttribute('class', 'icon');
@@ -375,15 +381,10 @@
                             img_icon.setAttribute('src', SRAurl + '/SIMRacingApps/' + item.icon);
                         img_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
 
-                        
-                        // HERES A COLUMN THAT I THINK ONLY SHOWS TITLE AND DESCRIPTION.
-                        // IT CAMOUFLAGES AS HELP. NO HELP SHALL BE HERE, MATE.
                         var td_text = document.createElement('td');
                         td_text.setAttribute('class', 'help');
                         tr_item.appendChild(td_text);
 
-
-                        // HERE'S A COLUMN WITH THE OPTIONS, A FORM WITH CHECKBOXES.
                         var td_form = document.createElement('td');
                         tr_item.appendChild(td_form);
                         td_form.setAttribute('class', 'options');
@@ -394,12 +395,6 @@
                         form_options.setAttribute('data-name', item.name);
                         form_options.setAttribute('id', 'options-' + item.name);
 
-
-                        // I'VE DONE STUFF HERE, LEAVE FOR NOW. LIKELY GOOD WRAPPERS TO HIDE CHECKBOXES
-                        // WHILE MAINTAINING FUNCTIONALITY.
-
-                        // THIS IS FIRST SET OF TWO SETS  OF OPTIONS.
-                        
                         // transparent
                         //var input_wrapper = document.write('<div>');  // wrapper
                         //form_options.appendChild(input_wrapper); // wrapper
@@ -460,10 +455,6 @@
                         label_loadonstartup.setAttribute('class', 'options_label');
                         label_loadonstartup.innerHTML = serverVersion.translations.LOADONSTARTUP || "LoadOnStartup";
 
-
-                        // I DON'T KNOW WHAT COLUMN THIS IS, AT THE MOMENT. CAN'T SEE.
-
-                        // THIS I THINK IS SECOND SET OF OPTIONS. ALREADY FIXED SOME DIVS INSTEAD OF TABLE JUGGLING.
                         var td_show = document.createElement('td');
                         tr_item.appendChild(td_show);
                         td_show.setAttribute('class', 'options');
@@ -544,11 +535,6 @@
                         label_inreplay.setAttribute('for', item.name + '-inreplay');
                         label_inreplay.setAttribute('class', 'show_options_label');
                         label_inreplay.innerHTML = serverVersion.translations.INREPLAY || "inreplay";
-
-
-
-                        // HERE BE DRAGONS.
-                        // FIND OUT AND FIX WHATEVER IS HERE.
 
                         var a_text;
                         //have to let the loader launch the settings.html.
