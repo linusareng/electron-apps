@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet">
     <meta http-equiv="cache-control" content="no-cache">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-lightmode.css">
     <title>Simracing Apps - custom</title>
 </head>
 <body id="body" style="width: 100%">
@@ -19,7 +19,9 @@
     </div>
 
     <header>
-        <div class="background-image"></div>
+        <div class="background-image">
+            <img src="headerimage.svg"/>
+        </div>
         <div class="logo">
             <img onclick="javascript:window.location.reload();" src="resources/SRA-Logo-128x128.png" alt="logo" />
         </div>
@@ -28,50 +30,38 @@
             Simracingapps <span style="opacity:.5;">//</span> LA
             <!-- TODO: Add byline, possibly edit app name -->
         </div>
-
-        <div class="header-meta">
-            <a id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings <i class="material-icons">tune</i></span></span></a>
-            <!-- TODO: we only need one helper page, but set it up -->
-            <a href="#">Info <i class="material-icons">person_pin</i></a>
-        </div>
     </header>
 
     <nav>
-        <!-- TODO: Add hard coded page for custom widgets by me which serves as default. Included widget on separate page -->
-        <a href="#apps" class="nav-selected">LA <b style="opacity: .5;">//</b> Widgets</a>
+        <a href="#favorites" class="nav-selected">Favorites</a>
         <a href="#apps">Apps</a>
         <a href="#widgets">Widgets</a>
+        <a href="#" class="refreshit" onclick="javascript:window.location.reload();"><i class="material-icons">refresh</i></a>
         <a href="#documentation" style="float:right;">Documentation</a>
+        <a style="float:right;" id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings</span></span></a>
     </nav>
 
     <section class="listing">
-        <div>
-            <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a><br />
-            <span id="version" class="version"></span><br />
-            <span id="electron_version" class="version"></span><br />
-            <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
-            <a id="copyright" class="copyright" target="_blank">Copyright</a><br />
-            <a id="license" class="license" target="_blank">License</a><br />
-            <a id="notice" class="notice" target="_blank">NOTICE</a><br />
-            <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
-            <span id="SRAurl"></span>
+        <div class="configurations">
             <form id="SRAconfigurationForm" class="SRAconfigurationForm">
+                <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
+                    <option value="default">default</option>
+                </select>
                 <input oninput="javascript:updateButtons();" type="text" id="SRAconfiguration" name="configuration" value="default">
                 <input onclick="javascript:saveConfiguration();" type="button" disabled="true" value="Create" name="save" id="save" />
                 <input onclick="javascript:deleteConfiguration();" type="button" disabled="true" value="Delete" name="delete" id="delete" />
                 <input onclick="javascript:hideWindows();" type="button" value="Hide All" name="hide" id="hide" />
                 <input onclick="javascript:showWindows();" type="button" value="Show All" name="show" id="show" />
-                <br />
-                <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
-                    <option value="default">default</option>
-                </select>
             </form>
         </div>
         <table>
             <tbody>
                 <table id="listingsTable">
                     <tbody id="listingsBody">
-                        <tr><td>Loading... If menu doesn't load, verify the SIMRacingAppsServer is running. Then click the Logo to refresh the page.</td></tr>
+                        <tr><td class="loading">
+                            <div class="spinner"></div>
+                            <div class="message-notice">The good stuff is loading</div>
+                        </td></tr>
                     </tbody>
                 </table>
             </tbody>
