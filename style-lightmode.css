@@ -7,8 +7,8 @@ Linus
 @import url('https://fonts.googleapis.com/css?family=Raleway:300,900');
 
 body {
-    font-size: 1rem;
-    font-family: Raleway;
+    font-family: Montserrat, Arial;
+    font-size: 12px;
     font-weight: 300;
     background: rgba(240,240,240,.8);
     color: #333;
@@ -17,12 +17,13 @@ body {
     min-width: 800px;
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
+
 
 a {
     color: mediumpurple;
@@ -137,11 +138,11 @@ section::-webkit-scrollbar {
 section::-webkit-scrollbar-track {
     background: rgba(0,0,0,.3); /* color of the tracking area */
     border-radius: 6px;
-    margin-top: 20px;
+    margin-top: 40px;
 }
 
 section::-webkit-scrollbar-thumb {
-    background-color: rgba(255,255,255,.3); /* color of the scroll thumb */
+    background-color: rgba(0,0,0,.6); /* color of the scroll thumb */
     border-radius: 4px; /* roundness of the scroll thumb */
     border: 0px solid rgba(255,255,255,.3); /* creates padding around scroll thumb */
 }
@@ -237,7 +238,7 @@ section {
 
 section.listing {
     height: calc(100vh - 240px);
-    width: calc(100vw);
+    width: calc(100vw - 20px);
     display: inline-block;
     scroll-behavior: smooth;
     overflow-y: overlay;
@@ -255,87 +256,18 @@ footer {
     border-radius: 40px;
     box-shadow: 0 0 40px white;
 }
-/* listing */
-body {
-    background: rgb(240,240,240);
-    font-family: Montserrat, Arial;
-    font-size: 12px;
-    color: #333;
-}
-#listingsTable {
-    width: 100%;
-}
+
+
+
 .loading {
     text-align: center;
 }
 .table-items {
     width: 100%;
 }
-
-    .table-items td.items-header {
-        font-size: 40px;
-        font-weight: 800;
-        padding: 40px 0 40px;
-    }
-
-    .table-items a {
-        text-decoration: none;
-        color: inherit;
-    }
-
-    .table-items tr td.icon {
-        padding: 5px;
-        position: relative;
-        cursor: pointer;
-    }
-
-        .table-items tr td.icon::after {
-            content: 'OPEN';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            background: rgba(0,0,0,.7);
-            z-index: 3;
-            color: white;
-            border-radius: 3px;
-            text-align: center;
-            transform: translate(-50%, -60%);
-            display: inline-block;
-            padding: 6px 10px;
-            font-size: 8px;
-            font-weight: 800;
-            line-height: 8px;
-            cursor: pointer;
-        }
-
-        .table-items tr td.icon,
-        .table-items tr td.icon img.image {
-            width: 60px;
-            height: 60px;
-            border-radius: 6px;
-        }
-
-    .table-items td.icon img.image {
-        box-shadow: 0 0 10px rgba(0,0,0,.4);
-    }
-
-    .table-items tr td {
-        line-height: 22px;
-    }
-
-    .table-items .itemtext {
-        font-size: 18px;
-        font-weight: 800;
-    }
-
-    .table-items .itemdesc {
-        color: #666;
-    }
-
-    .table-items td.options {
-        text-align: right;
-    }
-
+.table-items img {
+    max-height: 40px;
+}
 .input_wrapper,
 .input_wrapper_showoptions {
     font-size: 10px;
@@ -519,3 +451,48 @@ select {
       opacity: 0;
     }
   }
+
+#listingsTable {
+    width: 100%;
+}
+
+#listingsBody {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+li div.items-header {
+    font-weight: 800;
+    font-size: 20px;
+    margin: 40px 0;
+    text-align: center;
+}
+
+li.item {
+    background: rgba(255,255,255,.6);
+    margin-bottom: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 
+        /* text */
+        auto
+        /* options */  
+        200px
+        /* options 1 */
+        200px;
+}
+li.item div.icon {
+    display: none;
+}
+li.item div.help {
+    font-weight: 800;
+}
+li.item div.options {
+
+}
+li.item div.options form.options_form {}
+li.item div.options form.show_options_form {}
+.settings-text {
+    color: mediumpurple;
+}
