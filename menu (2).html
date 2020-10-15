@@ -1,0 +1,717 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="expires" content="0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <meta http-equiv="cache-control" content="no-cache">
+    <link rel="stylesheet" href="style-lightmode.css">
+    <title>Simracing Apps - custom</title>
+</head>
+<body id="body" style="width: 100%">
+
+    <div class="dragbar">
+        <!-- TODO: Edit name -->
+        <div class="title">Simracingapps</div>
+        <!-- TODO: fix the close function, then style it -->
+        <div class="dragbar-close" id="closeApp">Close</div>
+    </div>
+
+    <header>
+        <div class="background-image">
+            <img src="headerimage.svg"/>
+        </div>
+        <div class="logo">
+            <img onclick="javascript:window.location.reload();" src="resources/SRA-Logo-128x128.png" alt="logo" />
+        </div>
+
+        <div class="header-title" onclick="javascript:window.location.reload();">
+            Simracingapps <span style="opacity:.5;">//</span> LA
+            <!-- TODO: Add byline, possibly edit app name -->
+        </div>
+    </header>
+
+    <nav>
+        <a href="#favorites" class="nav-selected">Favorites</a>
+        <a href="#apps">Apps</a>
+        <a href="#widgets">Widgets</a>
+        <a href="#" class="refreshit" onclick="javascript:window.location.reload();"><i class="material-icons">refresh</i></a>
+        <a href="#documentation" style="float:right;">Documentation</a>
+        <a style="float:right;" id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings</span></span></a>
+    </nav>
+
+    <section class="listing">
+        <div class="configurations">
+            <form id="SRAconfigurationForm" class="SRAconfigurationForm">
+                <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
+                    <option value="default">default</option>
+                </select>
+                <input oninput="javascript:updateButtons();" type="text" id="SRAconfiguration" name="configuration" value="default">
+                <input onclick="javascript:saveConfiguration();" type="button" disabled="true" value="Create" name="save" id="save" />
+                <input onclick="javascript:deleteConfiguration();" type="button" disabled="true" value="Delete" name="delete" id="delete" />
+                <input onclick="javascript:hideWindows();" type="button" value="Hide All" name="hide" id="hide" />
+                <input onclick="javascript:showWindows();" type="button" value="Show All" name="show" id="show" />
+            </form>
+        </div>
+        <table>
+            <tbody>
+                <table id="listingsTable">
+                    <tbody id="listingsBody">
+                        <tr><td>
+                            <div class="spinner"></div>
+                            <div class="message-notice">The good stuff is loading</div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </tbody>
+            <tfoot>
+                <tr id="upload_row">
+                    <td>
+                        <form id="upload_form" class="upload" method="POST" enctype="multipart/form-data">
+                        </form>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        https://codepen.io/linusa/pen/YzWwYaE
+    </section>
+
+    <script type="text/javascript">
+        const ipc = require('electron').ipcRenderer;
+        var websiteVersion = {};
+        var websiteBETAVersion = {};
+        var serverVersion = {};
+        var SRAlauncher = {};
+        var isAppsHidden = false;
+
+        // close, not working at all
+        const closeApp = document.getElementById('closeApp');
+        closeApp.addEventListener('click', () => {
+            ipcRenderer.send('close-me');
+        });
+
+        function S4() {
+            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        };
+
+        var guid = (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+
+        function launch(name, url) {
+            console.log('menu.html:launch(' + name + ',' + url + ')');
+            ipc.send('loadApp', name, url);
+        }
+
+        function hideWindows() {
+            var hidden_request = new XMLHttpRequest();
+            hidden_request.open("GET", "http://" + SRAlauncher.hostname + ":" + SRAlauncher.port + "/SIMRacingApps/Data/Session/setAppsHidden/Y");
+            hidden_request.send();
+        }
+
+        function showWindows() {
+            var hidden_request = new XMLHttpRequest();
+            hidden_request.open("GET", "http://" + SRAlauncher.hostname + ":" + SRAlauncher.port + "/SIMRacingApps/Data/Session/setAppsHidden/N");
+            hidden_request.send();
+        }
+
+        function saveOptions(name, option) {
+            var item = {};
+            var length = document.forms.length;
+            for (var i = 0; i < length; i++) {
+                var form = document.forms[i];
+                if (form.id == ("options-" + name)) {
+
+                    //transparent and frame cannot be on at the same time
+                    //see which one changed and force the other off
+                    if (option == 'transparent' && form.transparent.checked)
+                        form.frame.checked = false;
+
+                    if (option == 'frame' && form.frame.checked)
+                        form.transparent.checked = false;
+
+                    //This storage key is used by the AppWindows to save position and size
+                    //therefore, read it in before you save the options with it.
+                    item.name = name;
+                    item.transparent = form.transparent.checked;
+                    item.frame = form.frame.checked;
+                    item.loadonstartup = form.loadonstartup.checked
+                }
+                if (form.id == ("show-options-" + name)) {
+                    //This storage key is used by the AppWindows to save position and size
+                    //therefore, read it in before you save the options with it.
+                    item.name = name;
+                    item.notconnected = form.notconnected.checked;
+                    item.incar = form.incar.checked;
+                    item.ingarage = form.ingarage.checked;
+                    item.inreplay = form.inreplay.checked;
+                }
+            }
+
+            if (item.name)
+                ipc.send('itemChanged', item);
+        };
+
+        function deleteConfiguration() {
+            var length = document.forms.length;
+            for (var i = 0; i < length; i++) {
+                var form = document.forms[i];
+                if (form.id == "SRAconfigurationForm") {
+                    var configuration = form.configuration.value;
+                    delete SRAlauncher.configurations[configuration];
+                    SRAlauncher.configuration = 'default';
+                    ipc.send('deleteConfiguration', configuration);
+                }
+            }
+        }
+
+        function saveConfiguration() {
+            var length = document.forms.length;
+            for (var i = 0; i < length; i++) {
+                var form = document.forms[i];
+                if (form.id == "SRAconfigurationForm") {
+                    var configuration = form.configuration.value;
+                    SRAlauncher.configuration = configuration;
+                    SRAlauncher.configurations[configuration] = true;
+                    console.log('ipc.send.loadConfiguration(' + configuration + ')');
+                    ipc.send('loadConfiguration', configuration);
+                }
+            }
+        }
+
+        function updateButtons() {
+            var length = document.forms.length;
+            for (var i = 0; i < length; i++) {
+                var form = document.forms[i];
+                if (form.id == "SRAconfigurationForm") {
+                    var configuration = form.configuration.value;
+                    if (configuration && !SRAlauncher.configurations[configuration]) {
+                        //console.log("New Configuration: " + configuration);
+                        document.getElementById("save").disabled = false;
+                        document.getElementById("delete").disabled = true;
+                    }
+                    else {
+                        //console.log("Existing Configuration: " + configuration);
+                        document.getElementById("save").disabled = true;
+                        if (configuration) {
+                            if (configuration != 'default')
+                                document.getElementById("delete").disabled = false;
+                            else
+                                document.getElementById("delete").disabled = true;
+
+                            if (SRAlauncher.configuration.toLowerCase() != configuration.toLowerCase()) {
+                                SRAlauncher.configuration = configuration;
+                                console.log('ipc.send.loadConfiguration(' + configuration + ')');
+                                ipc.send('loadConfiguration', configuration);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function configurationChange(e) {
+            var theinput = document.getElementById("SRAconfiguration");
+            var thelist = document.getElementById("configurations");
+            var idx = e.target.selectedIndex;
+            var content = thelist.options[idx].innerHTML;
+            theinput.value = content;
+            saveConfiguration();
+        }
+
+        ipc.on('listings', function (e, items) {
+            var SRAurl = "http://" + items.SRAlauncher.hostname + (items.SRAlauncher.port == 80 ? "" : ":" + items.SRAlauncher.port);
+
+            SRAlauncher = items.SRAlauncher;
+            document.getElementById("SRAconfiguration").value = SRAlauncher.configuration;
+            var datalist = document.getElementById("configurations");
+            datalist.parentElement.removeChild(datalist);
+            datalist = document.createElement("select");
+            datalist.setAttribute("id", "configurations");
+            datalist.setAttribute("name", "configurations");
+            datalist.addEventListener('change', configurationChange, false);
+            var selectedIndex = 0;
+            for (var configuration in SRAlauncher.configurations) {
+                var option = document.createElement("option");
+                option.setAttribute("value", configuration);
+                option.innerHTML = configuration;
+                datalist.appendChild(option);
+                if (SRAlauncher.configuration.toLowerCase() == configuration.toLowerCase())
+                    datalist.selectedIndex = selectedIndex;
+                selectedIndex++;
+            }
+            document.getElementById("SRAconfigurationForm").appendChild(datalist);
+            updateButtons();
+
+            serverVersion = items.version;
+            serverVersion.translations = serverVersion.translations || {};
+            console.log("listings: " + JSON.stringify(serverVersion));
+
+            document.getElementById("version").innerHTML = (serverVersion.translations.SERVERVERSION || 'Server Version') + ': '
+                + serverVersion.major
+                + '.' + serverVersion.minor
+                + "_" + serverVersion.build
+                + " [" + items.lang + "]";
+            document.getElementById("copyright").href = SRAurl + serverVersion.copyrightUrl;
+            document.getElementById("copyright").innerHTML = serverVersion.translations.COPYRIGHT || 'Copyright';
+            document.getElementById("license").href = SRAurl + serverVersion.licenseUrl;
+            document.getElementById("license").innerHTML = serverVersion.translations.LICENSE || 'License';
+            document.getElementById("notice").href = SRAurl + serverVersion.noticeUrl;
+            document.getElementById("notice").innerHTML = serverVersion.translations.NOTICE || 'Notice';
+            document.getElementById("releasenotes").href = SRAurl + serverVersion.releasenotes;
+            document.getElementById("releasenotes").innerHTML = serverVersion.translations.RELEASENOTES || 'Release Notes';
+            document.getElementById("electron_version").innerHTML = 'Electron-Apps ' + (serverVersion.translations.VERSION || 'Version') + ': ' + items.SRAlauncher.version;
+            document.getElementById("SRAurl").innerHTML = (serverVersion.translations.SERVERURL || 'Server URL') + ": " + SRAurl;
+            document.getElementById("upload_form").action = SRAurl + "/SIMRacingApps/upload";
+            document.getElementById("upload_form").innerHTML = serverVersion.translations.installbefore + ", (" + serverVersion.userpath + "), " + serverVersion.translations.installafter + "<br />";
+
+            //add the buttons
+            var file = document.createElement("input");
+            file.type = "file";
+            file.name = "file";
+            file.id = "file";
+            file.accept = ".sra";
+            file.addEventListener('change', () => {
+                var f = document.forms["upload_form"].elements;
+                var cansubmit = true;
+
+                for (var i = 0; i < f.length; i++) {
+                    if (f[i].value.length == 0) cansubmit = false;
+                }
+
+                document.getElementById('upload').disabled = !cansubmit;
+            }, false);
+            document.getElementById("upload_form").appendChild(file);
+
+            var submit = document.createElement("input");
+            submit.type = "submit";
+            submit.name = "upload";
+            submit.id = "upload";
+            submit.disabled = true;
+            document.getElementById("upload_form").appendChild(submit);
+
+            //now translate the buttons
+            if (!document.getElementById("SRAconfigurationForm").innerHTML.startsWith(serverVersion.translations.CONFIGURATION)) {
+                document.getElementById("SRAconfigurationForm").innerHTML = (serverVersion.translations.CONFIGURATION || 'Configuration') + ": <br />" + document.getElementById("SRAconfigurationForm").innerHTML;
+
+                //for some reason updating the innerHTML of the form looses the listener
+                //so put it back.
+                document.getElementById("SRAconfiguration").value = SRAlauncher.configuration;
+                var datalist = document.getElementById("configurations");
+                datalist.addEventListener('change', configurationChange, false);
+                var selectedIndex = 0;
+                for (var configuration in SRAlauncher.configurations) {
+                    if (SRAlauncher.configuration.toLowerCase() == configuration.toLowerCase())
+                        datalist.selectedIndex = selectedIndex;
+                    selectedIndex++;
+                }
+            }
+            document.getElementById("save").value = serverVersion.translations.CREATE || 'Create';
+            document.getElementById("delete").value = serverVersion.translations.DELETE || 'Delete';
+            document.getElementById("hide").value = serverVersion.translations.HIDEALL || 'Hide All';
+            document.getElementById("show").value = serverVersion.translations.SHOWALL || 'Show All';
+            document.getElementById("upload").value = serverVersion.translations.UPLOAD || 'Upload';
+            document.getElementById("settings-text").innerHTML = serverVersion.translations.SETTINGS || 'Settings';
+
+            checkForUpdate();
+
+
+            // HERE WE GO, CREATE A LIST OF ALL APPS, WIDGETS, DOCS & STUFF
+            var listingsTable = document.getElementById("listingsTable");
+            listingsTable.setAttribute('class', 'table-items' + ' table-linus');
+
+            var listingsBody = document.getElementById("listingsBody");
+            listingsBody.parentElement.removeChild(listingsBody);
+
+
+            // THE INSERTION POINT IS ABOVE. NOW.
+            // HERE STARTS THE MAYHEM, FIX IT.
+            // REPLACE TBODY WITH AN UL.
+            listingsBody = document.createElement("tbody");
+            listingsBody.setAttribute('id', 'listingsBody');
+
+
+            // FIRST, LET'S PRINT OUT A HEADLINE FOR THIS SECTION.
+            // THESE ARE APPS, WIDGETS, DOCS. POSSIBLY FAVORITES.
+            // REPLACE TR WITH LI HEADER CLASS. REMOVE TD'S.
+            for (var headeridx in items.headers) {
+                var header = items.headers[headeridx];
+                if (items[header].length > 0) {
+                    var tr_header = document.createElement('tr');
+
+                    var td_header = document.createElement('td');
+                    td_header.setAttribute('class', 'items-header');
+                    td_header.setAttribute('colspan', '4');
+                    td_header.innerHTML = serverVersion.translations[header] || header;
+                    tr_header.appendChild(td_header);
+
+                    var anchor = document.createElement('a');
+                    anchor.setAttribute('id', header);
+                    tr_header.prepend(anchor);
+
+                    listingsBody.appendChild(tr_header);
+
+                    // For each HEADER, print out ITEMS, this is the main part, the above shit I can handle
+                    // NOW, FOR EACH HEADER PRINT OUT ITEMS THAT SITS BELOW IT.
+                    // REPLACE TR WITH AN LI ITEM CLASS.
+                    for (var itemsidx in items[header]) {
+                        var item = items[header][itemsidx];
+
+                        var tr_item = document.createElement('tr');
+                        listingsBody.appendChild(tr_item);
+                        tr_item.setAttribute('class', 'item');
+
+                        // FIRST COLUMN HAS IMAGE.
+                        var td_icon = document.createElement('td');
+                        tr_item.appendChild(td_icon);
+                        td_icon.setAttribute('class', 'icon');
+                        td_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
+
+                        var img_icon = document.createElement('img');
+                        td_icon.appendChild(img_icon);
+                        img_icon.setAttribute('class', 'image');
+                        if (item.icon.match(/^http/))
+                            img_icon.setAttribute('src', item.icon);
+                        else
+                            img_icon.setAttribute('src', SRAurl + '/SIMRacingApps/' + item.icon);
+                        img_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
+
+                        
+                        // HERES A COLUMN THAT I THINK ONLY SHOWS TITLE AND DESCRIPTION.
+                        // IT CAMOUFLAGES AS HELP. NO HELP SHALL BE HERE, MATE.
+                        var td_text = document.createElement('td');
+                        td_text.setAttribute('class', 'help');
+                        tr_item.appendChild(td_text);
+
+
+                        // HERE'S A COLUMN WITH THE OPTIONS, A FORM WITH CHECKBOXES.
+                        var td_form = document.createElement('td');
+                        tr_item.appendChild(td_form);
+                        td_form.setAttribute('class', 'options');
+
+                        var form_options = document.createElement('form');
+                        td_form.appendChild(form_options);
+                        form_options.setAttribute('class', 'options_form');
+                        form_options.setAttribute('data-name', item.name);
+                        form_options.setAttribute('id', 'options-' + item.name);
+
+
+                        // I'VE DONE STUFF HERE, LEAVE FOR NOW. LIKELY GOOD WRAPPERS TO HIDE CHECKBOXES
+                        // WHILE MAINTAINING FUNCTIONALITY.
+
+                        // THIS IS FIRST SET OF TWO SETS  OF OPTIONS.
+                        
+                        // transparent
+                        //var input_wrapper = document.write('<div>');  // wrapper
+                        //form_options.appendChild(input_wrapper); // wrapper
+                        var input_wrapper = document.createElement('div');
+                        form_options.appendChild(input_wrapper);
+                        input_wrapper.setAttribute('class', 'input_wrapper');
+
+                        var input_transparent = document.createElement('input');
+
+                        input_wrapper.appendChild(input_transparent);
+                        input_transparent.setAttribute('type', 'checkbox');
+                        input_transparent.setAttribute('name', 'transparent');
+                        input_transparent.setAttribute('value', 'transparent');
+                        input_transparent.setAttribute('id', item.name + '-transparent');
+                        input_transparent.checked = item.transparent;
+                        input_transparent.addEventListener('click', new Function('saveOptions("' + item.name + '","transparent");'));
+
+                        var label_transparent = document.createElement('label');
+                        input_wrapper.appendChild(label_transparent);
+                        label_transparent.setAttribute('for', item.name + '-transparent');
+                        label_transparent.setAttribute('class', 'options_label');
+                        label_transparent.innerHTML = serverVersion.translations.TRANSPARENT || "Transparent";
+                        // end transparent
+
+                        var input_wrapper = document.createElement('div');
+                        form_options.appendChild(input_wrapper);
+                        input_wrapper.setAttribute('class', 'input_wrapper');
+                        var input_frame = document.createElement('input');
+                        input_wrapper.appendChild(input_frame);
+                        input_frame.setAttribute('type', 'checkbox');
+                        input_frame.setAttribute('name', 'frame');
+                        input_frame.setAttribute('value', 'frame');
+                        input_frame.setAttribute('id', item.name + '-frame');
+                        input_frame.checked = item.frame;
+                        input_frame.addEventListener('click', new Function('saveOptions("' + item.name + '","frame");'));
+
+                        var label_frame = document.createElement('label');
+                        input_wrapper.appendChild(label_frame);
+                        label_frame.setAttribute('for', item.name + '-frame');
+                        label_frame.setAttribute('class', 'options_label');
+                        label_frame.innerHTML = serverVersion.translations.FRAME || "Frame";
+
+                        var input_wrapper = document.createElement('div');
+                        form_options.appendChild(input_wrapper);
+                        input_wrapper.setAttribute('class', 'input_wrapper');
+                        var input_loadonstartup = document.createElement('input');
+                        input_wrapper.appendChild(input_loadonstartup);
+                        input_loadonstartup.setAttribute('type', 'checkbox');
+                        input_loadonstartup.setAttribute('name', 'loadonstartup');
+                        input_loadonstartup.setAttribute('value', 'loadonstartup');
+                        input_loadonstartup.setAttribute('id', item.name + '-loadonstartup');
+                        input_loadonstartup.checked = item.loadonstartup;
+                        input_loadonstartup.addEventListener('click', new Function('saveOptions("' + item.name + '");'));
+
+                        var label_loadonstartup = document.createElement('label');
+                        input_wrapper.appendChild(label_loadonstartup);
+                        label_loadonstartup.setAttribute('for', item.name + '-loadonstartup');
+                        label_loadonstartup.setAttribute('class', 'options_label');
+                        label_loadonstartup.innerHTML = serverVersion.translations.LOADONSTARTUP || "LoadOnStartup";
+
+
+                        // I DON'T KNOW WHAT COLUMN THIS IS, AT THE MOMENT. CAN'T SEE.
+
+                        // THIS I THINK IS SECOND SET OF OPTIONS. ALREADY FIXED SOME DIVS INSTEAD OF TABLE JUGGLING.
+                        var td_show = document.createElement('td');
+                        tr_item.appendChild(td_show);
+                        td_show.setAttribute('class', 'options');
+                        var show_form_options = document.createElement('form');
+                        td_show.appendChild(show_form_options);
+                        show_form_options.setAttribute('class', 'show_options_form');
+                        show_form_options.setAttribute('data-name', item.name);
+                        show_form_options.setAttribute('id', 'show-options-' + item.name);
+
+                        var input_wrapper_showoptions = document.createElement('div');
+                        show_form_options.appendChild(input_wrapper_showoptions);
+                        input_wrapper_showoptions.setAttribute('class', 'input_wrapper input_wrapper_showoptions');
+                        var input_notconnected = document.createElement('input');
+                        input_wrapper_showoptions.appendChild(input_notconnected);
+                        input_notconnected.setAttribute('type', 'checkbox');
+                        input_notconnected.setAttribute('name', 'notconnected');
+                        input_notconnected.setAttribute('value', 'notconnected');
+                        input_notconnected.setAttribute('id', item.name + '-notconnected');
+                        input_notconnected.checked = item.notconnected;
+                        input_notconnected.addEventListener('click', new Function('saveOptions("' + item.name + '");'));
+
+                        var label_notconnected = document.createElement('label');
+                        input_wrapper_showoptions.appendChild(label_notconnected);
+                        label_notconnected.setAttribute('for', item.name + '-notconnected');
+                        label_notconnected.setAttribute('class', 'show_options_label');
+                        label_notconnected.innerHTML = serverVersion.translations.NOTCONNECTED || "NotConnected";
+
+                        var input_wrapper_showoptions = document.createElement('div');
+                        show_form_options.appendChild(input_wrapper_showoptions);
+                        input_wrapper_showoptions.setAttribute('class', 'input_wrapper input_wrapper_showoptions');
+                        var input_incar = document.createElement('input');
+                        input_wrapper_showoptions.appendChild(input_incar);
+                        input_incar.setAttribute('type', 'checkbox');
+                        input_incar.setAttribute('name', 'incar');
+                        input_incar.setAttribute('value', 'incar');
+                        input_incar.setAttribute('id', item.name + '-incar');
+                        input_incar.checked = item.incar;
+                        input_incar.addEventListener('click', new Function('saveOptions("' + item.name + '");'));
+
+                        var label_incar = document.createElement('label');
+                        input_wrapper_showoptions.appendChild(label_incar);
+                        label_incar.setAttribute('for', item.name + '-incar');
+                        label_incar.setAttribute('class', 'show_options_label');
+                        label_incar.innerHTML = serverVersion.translations.INCAR || "incar";
+
+                        var input_wrapper_showoptions = document.createElement('div');
+                        show_form_options.appendChild(input_wrapper_showoptions);
+                        input_wrapper_showoptions.setAttribute('class', 'input_wrapper input_wrapper_showoptions');
+                        var input_ingarage = document.createElement('input');
+                        input_wrapper_showoptions.appendChild(input_ingarage);
+                        input_ingarage.setAttribute('type', 'checkbox');
+                        input_ingarage.setAttribute('name', 'ingarage');
+                        input_ingarage.setAttribute('value', 'ingarage');
+                        input_ingarage.setAttribute('id', item.name + '-ingarage');
+                        input_ingarage.checked = item.ingarage;
+                        input_ingarage.addEventListener('click', new Function('saveOptions("' + item.name + '");'));
+
+                        var label_ingarage = document.createElement('label');
+                        input_wrapper_showoptions.appendChild(label_ingarage);
+                        label_ingarage.setAttribute('for', item.name + '-ingarage');
+                        label_ingarage.setAttribute('class', 'show_options_label');
+                        label_ingarage.innerHTML = serverVersion.translations.INGARAGE || "ingarage";
+
+                        var input_wrapper_showoptions = document.createElement('div');
+                        show_form_options.appendChild(input_wrapper_showoptions);
+                        input_wrapper_showoptions.setAttribute('class', 'input_wrapper input_wrapper_showoptions');
+                        var input_inreplay = document.createElement('input');
+                        input_wrapper_showoptions.appendChild(input_inreplay);
+                        input_inreplay.setAttribute('type', 'checkbox');
+                        input_inreplay.setAttribute('name', 'inreplay');
+                        input_inreplay.setAttribute('value', 'inreplay');
+                        input_inreplay.setAttribute('id', item.name + '-inreplay');
+                        input_inreplay.checked = item.inreplay;
+                        input_inreplay.addEventListener('click', new Function('saveOptions("' + item.name + '");'));
+
+                        var label_inreplay = document.createElement('label');
+                        input_wrapper_showoptions.appendChild(label_inreplay);
+                        label_inreplay.setAttribute('for', item.name + '-inreplay');
+                        label_inreplay.setAttribute('class', 'show_options_label');
+                        label_inreplay.innerHTML = serverVersion.translations.INREPLAY || "inreplay";
+
+
+
+                        // HERE BE DRAGONS.
+                        // FIND OUT AND FIX WHATEVER IS HERE.
+
+                        var a_text;
+                        //have to let the loader launch the settings.html.
+                        //it will not render under straight electron client.
+                        if (item.doc == 'settings.html') {
+                            a_text = document.createElement('div');
+                            td_text.appendChild(a_text);
+                            a_text.setAttribute('class', 'settings-text');
+                            a_text.addEventListener('click', new Function('launch("Settings");'));
+                        }
+                        else {
+                            a_text = document.createElement('a');
+                            td_text.appendChild(a_text);
+                            if (item.doc.match(/^http/))
+                                a_text.setAttribute('href', item.doc);
+                            else
+                                a_text.setAttribute('href', SRAurl + '/SIMRacingApps/' + item.doc);
+                            a_text.setAttribute('target', '_blank');
+                        }
+
+                        var div_text = document.createElement('div');
+                        a_text.appendChild(div_text);
+                        div_text.setAttribute('class', 'itemtext');
+                        if (item.name == 'Settings') {
+                            div_text.innerHTML = (serverVersion.translations.SETTINGS || item.name) + '<br />';
+                        }
+                        else {
+                            div_text.innerHTML = item.name + '<br />';
+                        }
+
+                        var div_desc = document.createElement('div');
+                        a_text.appendChild(div_desc);
+                        div_desc.setAttribute('class', 'itemdesc');
+                        div_desc.innerHTML = item.description;
+                    }
+                }
+                listingsTable.appendChild(listingsBody);
+            }
+
+            var hidden_request = new XMLHttpRequest();
+            hidden_request.onreadystatechange = function (e) {
+                if (this.readyState == this.DONE) {
+                    if (this.status == 200) {
+                        var data = JSON.parse(hidden_request.responseText);
+                        //console.log("IsAppsHidden = " + JSON.stringify(data));
+                        if (data.Value && !isAppsHidden) {
+                            ipc.send('hide');
+                            isAppsHidden = true;
+                        }
+                        else
+                            if (!data.Value && isAppsHidden) {
+                                ipc.send('show');
+                                isAppsHidden = false;
+                            }
+                    }
+                }
+                setTimeout(function () {
+                    hidden_request.open("GET", "http://" + SRAlauncher.hostname + ":" + SRAlauncher.port + "/SIMRacingApps/Data/Session/IsAppsHidden?output=json");
+                    hidden_request.send();
+                }, 500);
+            };
+
+            console.log("Starting IsAppsHidden");
+            setTimeout(function () {
+                hidden_request.open("GET", "http://" + SRAlauncher.hostname + ":" + SRAlauncher.port + "/SIMRacingApps/Data/Session/IsAppsHidden?output=json");
+                hidden_request.send();
+            }, 500);
+
+            showWindows(); //always start with windows showing
+        });
+
+        //check for an update
+        var updateRequest = new XMLHttpRequest();
+        updateRequest.onreadystatechange = function () {
+            if (updateRequest.readyState == 4 && updateRequest.status == 200) {
+                var version = JSON.parse(updateRequest.responseText);
+                console.log("SIMRacingApps.com/version.json: " + JSON.stringify(version));
+                websiteVersion = version;
+                checkForUpdate();
+            }
+        }
+        updateRequest.open("GET", 'http://SIMRacingApps.com/version.json');
+        updateRequest.send();
+
+        //check for an update
+        var updateBETARequest = new XMLHttpRequest();
+        updateBETARequest.onreadystatechange = function () {
+            if (updateBETARequest.readyState == 4 && updateBETARequest.status == 200) {
+                var BETAversion = JSON.parse(updateBETARequest.responseText);
+                console.log("SIMRacingApps.com/BETA-version.json: " + JSON.stringify(BETAversion));
+                websiteBETAVersion = BETAversion;
+                checkForUpdate();
+            }
+        }
+        updateBETARequest.open("GET", 'http://SIMRacingApps.com/BETA-version.json');
+        updateBETARequest.send();
+
+        function checkForUpdate() {
+            //we can't check until both servers have responed
+            if (serverVersion.major && websiteVersion.major && websiteBETAVersion.major) {
+                //serverVersion.major = 1;
+                //serverVersion.minor = 1;
+                //serverVersion.build = "BETA-2016.04.01";
+                //websiteVersion.major = 1;
+                //websiteVersion.minor = 1;
+                //websiteVersion.build = "2016.05.01";
+                //websiteBETAVersion.major = 1;
+                //websiteBETAVersion.minor = 0;
+                //websiteBETAVersion.build = "RC-2016.05.15";
+                serverVersion.major *= 1;
+                serverVersion.minor *= 1;
+                websiteVersion.major *= 1;
+                websiteVersion.minor *= 1;
+                websiteBETAVersion.major *= 1;
+                websiteBETAVersion.minor *= 1;
+
+                var versionString = "Version: " + serverVersion.major + "." + serverVersion.minor + "-" + serverVersion.build;
+                var websiteBETABuild = "";
+                var a = websiteBETAVersion.build.split(/[-.]/);
+                for (var i = 0; i < a.length; i++) {
+                    if (a[i].match(/[0-9]/))
+                        websiteBETABuild += "" + a[i];
+                }
+                websiteBETABuild *= 1;
+
+                var websiteBuild = "";
+                var a = websiteVersion.build.split(/[-.]/);
+                for (var i = 0; i < a.length; i++) {
+                    if (a[i].match(/[0-9]/))
+                        websiteBuild += "" + a[i];
+                }
+                websiteBuild *= 1;
+
+                var build = "";
+                a = serverVersion.build.split(/[-.]/);
+                for (var i = 0; i < a.length; i++) {
+                    if (a[i].match(/[0-9]/))
+                        build += "" + a[i];
+                }
+                build *= 1;
+
+                //if the main version on the website is newer, post it as the update
+                if (serverVersion.major < websiteVersion.major
+                    || (serverVersion.major == websiteVersion.major && serverVersion.minor < websiteVersion.minor)
+                    || (serverVersion.major == websiteVersion.major && serverVersion.minor == websiteVersion.minor && build < websiteBuild)
+                ) {
+                    var updateString = "(Server UPDATE Available: " + websiteVersion.major + "." + websiteVersion.minor + "-" + websiteVersion.build + ")";
+                    document.getElementById("update").innerHTML = updateString + "<br />";
+                }
+                else //if this is a BETA/RC version, then post the new BETA/RC as the update
+                    if ((serverVersion.build.match(/^BETA-/) || serverVersion.build.match(/^RC-/))
+                        && (serverVersion.major < websiteBETAVersion.major
+                            || (serverVersion.major == websiteBETAVersion.major && serverVersion.minor < websiteBETAVersion.minor)
+                            || (serverVersion.major == websiteBETAVersion.major && serverVersion.minor == websiteBETAVersion.minor && build < websiteBETABuild))
+                    ) {
+                        var updateString = "(Server UPDATE Available: " + websiteBETAVersion.major + "." + websiteBETAVersion.minor + "-" + websiteBETAVersion.build + ")";
+                        document.getElementById("update").innerHTML = updateString + "<br />";
+                        document.getElementById("update").href = "http://github.com/SIMRacingApps/SIMRacingApps/releases";
+                    }
+            }
+        };
+
+    </script>
+
+</body>
+</html>
