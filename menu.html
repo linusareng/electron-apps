@@ -17,7 +17,6 @@
         <!-- TODO: fix the close function, then style it -->
         <div class="dragbar-close" id="closeApp">Close</div>
     </div>
-
     <header>
         <div class="background-image"></div>
         <div class="logo">
@@ -37,27 +36,17 @@
     </header>
 
     <nav>
-        <a href="#favorites" class="nav-selected">Favorites</a>
+        <a href="#top">Home</a>
         <a href="#apps">Apps</a>
         <a href="#widgets">Widgets</a>
         <a href="#" class="refreshit" onclick="javascript:window.location.reload();"><i class="material-icons">refresh</i></a>
         <a href="#documentation" style="float:right;">Documentation</a>
         <a style="float:right;" id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings</span></span></a>
     </nav>
-
+    
     <section class="listing">
-        <div>
-            <div style="display:none;">
-                <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a><br />
-                <span id="version" class="version"></span><br />
-                <span id="electron_version" class="version"></span><br />
-                <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
-                <a id="copyright" class="copyright" target="_blank">Copyright</a><br />
-                <a id="license" class="license" target="_blank">License</a><br />
-                <a id="notice" class="notice" target="_blank">NOTICE</a><br />
-                <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
-                <span id="SRAurl"></span>
-            </div>
+        <div><a id="top"></a>
+            
             <form id="SRAconfigurationForm" class="SRAconfigurationForm">
                 <input oninput="javascript:updateButtons();" type="text" id="SRAconfiguration" name="configuration" value="default">
                 <input onclick="javascript:saveConfiguration();" type="button" disabled="true" value="Create" name="save" id="save" />
@@ -87,6 +76,26 @@
 
 
     </section>
+
+    <footer>
+        <div>
+            <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a>
+            //
+            <span id="version" class="version"></span>
+            //
+            <span id="electron_version" class="version"></span>
+            //
+            <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
+            <a id="copyright" class="copyright" target="_blank">Copyright</a>
+            //
+            <a id="license" class="license" target="_blank">License</a>
+            //
+            <a id="notice" class="notice" target="_blank">NOTICE</a>
+            //
+            <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
+            <span id="SRAurl"></span>
+        </div>
+    </footer>
 
     <script type="text/javascript">
         const ipc = require('electron').ipcRenderer;
@@ -344,7 +353,7 @@
 
                     var td_header = document.createElement('div');
                     td_header.setAttribute('class', 'items-header');
-                    td_header.innerHTML = serverVersion.translations[header] || header;
+                    td_header.innerHTML = '<span>' + serverVersion.translations[header] || header + '</span>';
                     tr_header.appendChild(td_header);
 
                     var anchor = document.createElement('a');
@@ -365,6 +374,12 @@
                         tr_item.appendChild(td_icon);
                         td_icon.setAttribute('class', 'icon');
                         td_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
+
+
+                        var i_icon = document.createElement('i');
+                        td_icon.appendChild(i_icon);
+                        i_icon.setAttribute('class', 'material-icons');
+                        i_icon.innerHTML = ('arrow_circle_up');
 
                         var img_icon = document.createElement('img');
                         td_icon.appendChild(img_icon);
@@ -410,7 +425,7 @@
                         input_wrapper.appendChild(label_transparent);
                         label_transparent.setAttribute('for', item.name + '-transparent');
                         label_transparent.setAttribute('class', 'options_label');
-                        label_transparent.innerHTML = serverVersion.translations.TRANSPARENT || "Transparent";
+                        label_transparent.innerHTML = '<span>' + serverVersion.translations.TRANSPARENT || "Transparent" + '</span>';
                         // end transparent
 
                         var input_wrapper = document.createElement('div');
@@ -556,7 +571,7 @@
                             div_text.innerHTML = (serverVersion.translations.SETTINGS || item.name) + '<br />';
                         }
                         else {
-                            div_text.innerHTML = item.name + '';
+                            div_text.innerHTML = item.name.split("-").join(" ");
                         }
 
                         var div_desc = document.createElement('div');

@@ -46,7 +46,7 @@ var main;
 var windows = [];
 var delay = 0;
 var appsToLoad = {};
-var frame = false;
+var frame = true;
 var transparent = false;
 var clicktrough = true;
 var backgroundColor = "";
