@@ -182,7 +182,7 @@ nav a.refreshit:hover::after {
         line-height: 44px;
         padding: 0 20px;
         text-transform: uppercase;
-        transition: color 500ms ease-in;
+        transition: color 200ms ease-in;
         position: relative;
         z-index: 1;
         color: rgb(147, 112, 216);

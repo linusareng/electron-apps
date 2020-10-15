@@ -74,7 +74,7 @@
                 </tr>
             </tfoot>
         </table>
-
+        https://codepen.io/linusa/pen/YzWwYaE
     </section>
 
     <script type="text/javascript">
@@ -314,18 +314,25 @@
 
             checkForUpdate();
 
-            // is this it?
+
+            // HERE WE GO, CREATE A LIST OF ALL APPS, WIDGETS, DOCS & STUFF
             var listingsTable = document.getElementById("listingsTable");
             listingsTable.setAttribute('class', 'table-items' + ' table-linus');
 
             var listingsBody = document.getElementById("listingsBody");
             listingsBody.parentElement.removeChild(listingsBody);
 
-            // we've found the insertion point, remove and insert a new one
+
+            // THE INSERTION POINT IS ABOVE. NOW.
+            // HERE STARTS THE MAYHEM, FIX IT.
+            // REPLACE TBODY WITH AN UL.
             listingsBody = document.createElement("tbody");
             listingsBody.setAttribute('id', 'listingsBody');
 
-            // print out headers, that is APPS, WIDGETS and stuff
+
+            // FIRST, LET'S PRINT OUT A HEADLINE FOR THIS SECTION.
+            // THESE ARE APPS, WIDGETS, DOCS. POSSIBLY FAVORITES.
+            // REPLACE TR WITH LI HEADER CLASS. REMOVE TD'S.
             for (var headeridx in items.headers) {
                 var header = items.headers[headeridx];
                 if (items[header].length > 0) {
@@ -344,6 +351,8 @@
                     listingsBody.appendChild(tr_header);
 
                     // For each HEADER, print out ITEMS, this is the main part, the above shit I can handle
+                    // NOW, FOR EACH HEADER PRINT OUT ITEMS THAT SITS BELOW IT.
+                    // REPLACE TR WITH AN LI ITEM CLASS.
                     for (var itemsidx in items[header]) {
                         var item = items[header][itemsidx];
 
@@ -351,6 +360,7 @@
                         listingsBody.appendChild(tr_item);
                         tr_item.setAttribute('class', 'item');
 
+                        // FIRST COLUMN HAS IMAGE.
                         var td_icon = document.createElement('td');
                         tr_item.appendChild(td_icon);
                         td_icon.setAttribute('class', 'icon');
@@ -365,10 +375,15 @@
                             img_icon.setAttribute('src', SRAurl + '/SIMRacingApps/' + item.icon);
                         img_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
 
+                        
+                        // HERES A COLUMN THAT I THINK ONLY SHOWS TITLE AND DESCRIPTION.
+                        // IT CAMOUFLAGES AS HELP. NO HELP SHALL BE HERE, MATE.
                         var td_text = document.createElement('td');
                         td_text.setAttribute('class', 'help');
                         tr_item.appendChild(td_text);
 
+
+                        // HERE'S A COLUMN WITH THE OPTIONS, A FORM WITH CHECKBOXES.
                         var td_form = document.createElement('td');
                         tr_item.appendChild(td_form);
                         td_form.setAttribute('class', 'options');
@@ -379,6 +394,12 @@
                         form_options.setAttribute('data-name', item.name);
                         form_options.setAttribute('id', 'options-' + item.name);
 
+
+                        // I'VE DONE STUFF HERE, LEAVE FOR NOW. LIKELY GOOD WRAPPERS TO HIDE CHECKBOXES
+                        // WHILE MAINTAINING FUNCTIONALITY.
+
+                        // THIS IS FIRST SET OF TWO SETS  OF OPTIONS.
+                        
                         // transparent
                         //var input_wrapper = document.write('<div>');  // wrapper
                         //form_options.appendChild(input_wrapper); // wrapper
@@ -439,6 +460,10 @@
                         label_loadonstartup.setAttribute('class', 'options_label');
                         label_loadonstartup.innerHTML = serverVersion.translations.LOADONSTARTUP || "LoadOnStartup";
 
+
+                        // I DON'T KNOW WHAT COLUMN THIS IS, AT THE MOMENT. CAN'T SEE.
+
+                        // THIS I THINK IS SECOND SET OF OPTIONS. ALREADY FIXED SOME DIVS INSTEAD OF TABLE JUGGLING.
                         var td_show = document.createElement('td');
                         tr_item.appendChild(td_show);
                         td_show.setAttribute('class', 'options');
@@ -519,6 +544,11 @@
                         label_inreplay.setAttribute('for', item.name + '-inreplay');
                         label_inreplay.setAttribute('class', 'show_options_label');
                         label_inreplay.innerHTML = serverVersion.translations.INREPLAY || "inreplay";
+
+
+
+                        // HERE BE DRAGONS.
+                        // FIND OUT AND FIX WHATEVER IS HERE.
 
                         var a_text;
                         //have to let the loader launch the settings.html.
