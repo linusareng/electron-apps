@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet">
     <meta http-equiv="cache-control" content="no-cache">
-    <link rel="stylesheet" href="style-lightmode.css">
+    <link rel="stylesheet" href="style.css">
     <title>Simracing Apps - custom</title>
 </head>
 <body id="body" style="width: 100%">
@@ -17,6 +17,7 @@
         <!-- TODO: fix the close function, then style it -->
         <div class="dragbar-close" id="closeApp">Close</div>
     </div>
+
     <header>
         <div class="background-image"></div>
         <div class="logo">
@@ -36,66 +37,55 @@
     </header>
 
     <nav>
-        <a href="#top">Home</a>
+        <!-- TODO: Add hard coded page for custom widgets by me which serves as default. Included widget on separate page -->
+        <a href="#apps" class="nav-selected">LA <b style="opacity: .5;">//</b> Widgets</a>
         <a href="#apps">Apps</a>
         <a href="#widgets">Widgets</a>
-        <a href="#" class="refreshit" onclick="javascript:window.location.reload();"><i class="material-icons">refresh</i></a>
         <a href="#documentation" style="float:right;">Documentation</a>
-        <a style="float:right;" id="settings" href="javascript:launch('Settings');"><span id="settings-text" class="settings-text">Simracingapps settings</span></span></a>
     </nav>
-    
+
     <section class="listing">
-        <div><a id="top"></a>
-            
+        <div>
+            <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a><br />
+            <span id="version" class="version"></span><br />
+            <span id="electron_version" class="version"></span><br />
+            <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
+            <a id="copyright" class="copyright" target="_blank">Copyright</a><br />
+            <a id="license" class="license" target="_blank">License</a><br />
+            <a id="notice" class="notice" target="_blank">NOTICE</a><br />
+            <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
+            <span id="SRAurl"></span>
             <form id="SRAconfigurationForm" class="SRAconfigurationForm">
                 <input oninput="javascript:updateButtons();" type="text" id="SRAconfiguration" name="configuration" value="default">
                 <input onclick="javascript:saveConfiguration();" type="button" disabled="true" value="Create" name="save" id="save" />
                 <input onclick="javascript:deleteConfiguration();" type="button" disabled="true" value="Delete" name="delete" id="delete" />
                 <input onclick="javascript:hideWindows();" type="button" value="Hide All" name="hide" id="hide" />
                 <input onclick="javascript:showWindows();" type="button" value="Show All" name="show" id="show" />
-                
+                <br />
                 <select onchange="javascript:configurationChange();" id="configurations" name="configurations">
-                    <option value="default">Default</option>
+                    <option value="default">default</option>
                 </select>
             </form>
         </div>
-        
-                <div id="listingsTable">
-                    <ul id="listingsBody">
-                        <li>
-                            <div class="spinner"></div>
-                            <div class="message-notice">The good stuff is loading</div>
-                        </li>
-                    </ul>
-                </div>
-            
-                <div id="upload_row">
-                    <form id="upload_form" class="upload" method="POST" enctype="multipart/form-data">
-                    </form>
-                </div>
-
+        <table>
+            <tbody>
+                <table id="listingsTable">
+                    <tbody id="listingsBody">
+                        <tr><td>Loading... If menu doesn't load, verify the SIMRacingAppsServer is running. Then click the Logo to refresh the page.</td></tr>
+                    </tbody>
+                </table>
+            </tbody>
+            <tfoot>
+                <tr id="upload_row">
+                    <td>
+                        <form id="upload_form" class="upload" method="POST" enctype="multipart/form-data">
+                        </form>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
 
     </section>
-
-    <footer>
-        <div>
-            <a id="sratitle" target="_blank" href="http://SIMRacingApps.com">SIMRacingApps.com</a>
-            //
-            <span id="version" class="version"></span>
-            //
-            <span id="electron_version" class="version"></span>
-            //
-            <a id='update' target='_blank' href='http://github.com/SIMRacingApps/SIMRacingApps/releases/latest' "></a>
-            <a id="copyright" class="copyright" target="_blank">Copyright</a>
-            //
-            <a id="license" class="license" target="_blank">License</a>
-            //
-            <a id="notice" class="notice" target="_blank">NOTICE</a>
-            //
-            <a id="releasenotes" class="releasenotes" target="_blank">Release Notes</a><br />
-            <span id="SRAurl"></span>
-        </div>
-    </footer>
 
     <script type="text/javascript">
         const ipc = require('electron').ipcRenderer;
@@ -311,7 +301,7 @@
 
             //now translate the buttons
             if (!document.getElementById("SRAconfigurationForm").innerHTML.startsWith(serverVersion.translations.CONFIGURATION)) {
-                document.getElementById("SRAconfigurationForm").innerHTML = (serverVersion.translations.CONFIGURATION || 'Configuration') + " " + document.getElementById("SRAconfigurationForm").innerHTML;
+                document.getElementById("SRAconfigurationForm").innerHTML = (serverVersion.translations.CONFIGURATION || 'Configuration') + ": <br />" + document.getElementById("SRAconfigurationForm").innerHTML;
 
                 //for some reason updating the innerHTML of the form looses the listener
                 //so put it back.
@@ -342,18 +332,19 @@
             listingsBody.parentElement.removeChild(listingsBody);
 
             // we've found the insertion point, remove and insert a new one
-            listingsBody = document.createElement("ul");
+            listingsBody = document.createElement("tbody");
             listingsBody.setAttribute('id', 'listingsBody');
 
             // print out headers, that is APPS, WIDGETS and stuff
             for (var headeridx in items.headers) {
                 var header = items.headers[headeridx];
                 if (items[header].length > 0) {
-                    var tr_header = document.createElement('li');
+                    var tr_header = document.createElement('tr');
 
-                    var td_header = document.createElement('div');
+                    var td_header = document.createElement('td');
                     td_header.setAttribute('class', 'items-header');
-                    td_header.innerHTML = '<span>' + serverVersion.translations[header] || header + '</span>';
+                    td_header.setAttribute('colspan', '4');
+                    td_header.innerHTML = serverVersion.translations[header] || header;
                     tr_header.appendChild(td_header);
 
                     var anchor = document.createElement('a');
@@ -366,20 +357,14 @@
                     for (var itemsidx in items[header]) {
                         var item = items[header][itemsidx];
 
-                        var tr_item = document.createElement('li');
+                        var tr_item = document.createElement('tr');
                         listingsBody.appendChild(tr_item);
                         tr_item.setAttribute('class', 'item');
 
-                        var td_icon = document.createElement('div');
+                        var td_icon = document.createElement('td');
                         tr_item.appendChild(td_icon);
                         td_icon.setAttribute('class', 'icon');
                         td_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
-
-
-                        var i_icon = document.createElement('i');
-                        td_icon.appendChild(i_icon);
-                        i_icon.setAttribute('class', 'material-icons');
-                        i_icon.innerHTML = ('arrow_circle_up');
 
                         var img_icon = document.createElement('img');
                         td_icon.appendChild(img_icon);
@@ -390,11 +375,11 @@
                             img_icon.setAttribute('src', SRAurl + '/SIMRacingApps/' + item.icon);
                         img_icon.addEventListener('click', new Function('launch("' + item.name + '","' + item.url + '");'));
 
-                        var td_text = document.createElement('div');
+                        var td_text = document.createElement('td');
                         td_text.setAttribute('class', 'help');
                         tr_item.appendChild(td_text);
 
-                        var td_form = document.createElement('div');
+                        var td_form = document.createElement('td');
                         tr_item.appendChild(td_form);
                         td_form.setAttribute('class', 'options');
 
@@ -425,7 +410,7 @@
                         input_wrapper.appendChild(label_transparent);
                         label_transparent.setAttribute('for', item.name + '-transparent');
                         label_transparent.setAttribute('class', 'options_label');
-                        label_transparent.innerHTML = '<span>' + serverVersion.translations.TRANSPARENT || "Transparent" + '</span>';
+                        label_transparent.innerHTML = serverVersion.translations.TRANSPARENT || "Transparent";
                         // end transparent
 
                         var input_wrapper = document.createElement('div');
@@ -464,7 +449,7 @@
                         label_loadonstartup.setAttribute('class', 'options_label');
                         label_loadonstartup.innerHTML = serverVersion.translations.LOADONSTARTUP || "LoadOnStartup";
 
-                        var td_show = document.createElement('div');
+                        var td_show = document.createElement('td');
                         tr_item.appendChild(td_show);
                         td_show.setAttribute('class', 'options');
                         var show_form_options = document.createElement('form');
@@ -571,7 +556,7 @@
                             div_text.innerHTML = (serverVersion.translations.SETTINGS || item.name) + '<br />';
                         }
                         else {
-                            div_text.innerHTML = item.name.split("-").join(" ");
+                            div_text.innerHTML = item.name + '<br />';
                         }
 
                         var div_desc = document.createElement('div');
