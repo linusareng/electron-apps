@@ -62,9 +62,13 @@
         
                 <div id="listingsTable">
                     <ul id="listingsBody">
-                        <li>
+                        <li style="text-align: center;"> 
                             <div class="spinner"></div>
                             <div class="message-notice">The good stuff is loading</div>
+                            <form id="testform">
+                                <input type="text" name="testsetting" />
+                                <input onclick="javascript:saveSetting()" type="button" value="Save" id="save"/>
+                            </form>
                         </li>
                     </ul>
                 </div>

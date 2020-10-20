@@ -258,6 +258,7 @@ footer {
     background: white;
     border-radius: 40px;
     box-shadow: 0 0 40px white;
+    margin: 0 auto;
 }
 .loading {
     text-align: center;

@@ -311,7 +311,7 @@ function loadMain() {
         request.onreadystatechange = function (e) {
             if (this.readyState == this.DONE) {
                 if (this.status == 200) {
-                    var listings = parseJSON(this.responseText);
+                    var listings = parseJSON(this.responseText); // THE LIST OF STUFF.
                     listings.SRAlauncher = SRAlauncher;
 
                     listings.lang = i18n;
@@ -330,6 +330,7 @@ function loadMain() {
                         }
                     }
 
+                    // WE SHOULD PROBABLY NOT ADD STATS FOR THE REGULAR APP. PROB REMOVE.
                     var gaurl = 'http://www.google-analytics.com/collect';
                     var gadata = 'v=1';
                     gadata += '&t=pageview';
@@ -353,6 +354,7 @@ function loadMain() {
                     ga.send();
 
 
+                    // HERE'S THE LIST WE DON'T WANT, AT ALL. CAN WE REMOVE IT?
                     for (var headeridx in listings.headers) {
                         var header = listings.headers[headeridx];
                         if (listings[header].length > 0) {
@@ -360,9 +362,14 @@ function loadMain() {
                                 var item = listings[header][listingsidx];
 
                                 //add these to the listings. We store these locally
+                                // PLACEMENT AND SETTINGS ARE STORED LOCALLY.
+                                // WE SHOULD BE ABLE TO ADD OUR OWN SETTINGS, ACTUALLY.
+                                // NUMBER OF CARS IN STANDINGS.
+                                // SHOW/HIDE TIRE COMPOUND.
+                                // ETC.
                                 if (menu) {
                                     item.transparent = false;
-                                    item.frame = header.toUpperCase() === 'DOCUMENTATION' ? true : false;
+                                    item.frame = header.toUpperCase() === 'DOCUMENTATION' ? true : false; 
                                     item.loadonstartup = false;
                                     item.notconnected = true;
                                     item.incar = true;
@@ -371,6 +378,7 @@ function loadMain() {
 
                                     console.log('loading menu item = ' + JSON.stringify(item));
 
+                                    // READ THE LOCALSTORAGE SETTINGS.
                                     if (localStorage.getItem(item.name)) {
                                         var state = parseJSON(localStorage.getItem(item.name));
                                         if (state) {
@@ -423,7 +431,8 @@ function loadMain() {
                             }
                         }
                     }
-
+                    // HERE WE THROW IT OUT TO THE APP.
+                    // WE WANT THE /WIDGETS ONLY. WHERE CAN WE FIX THAT?
                     main.webContents.send('listings', listings);
                 }
                 else {
@@ -460,6 +469,8 @@ function loadMain() {
         }
     });
 
+    // SAVE SOME SETTINGS ON CHANGE.
+    // PROB NEED TO ADD WHATEVER WE INCLUDE.
     ipc.on('itemChanged', function (e, item) {
         console.log('itemChanged().item = ' + JSON.stringify(item));
         var state = parseJSON(localStorage.getItem(item.name));
@@ -548,6 +559,7 @@ function loadMain() {
         win.setAspectRatio(options.width / options.height);  //doesn't work on windows
     }
 
+    // THIS SEEMS TO BE THE SETTINGS WINDOW FROM HELL.
     ipc.on('loadApp', function (e, name, url) {
         var SRAapp = localStorage.getItem(name);
         if (name == 'settings' || name == 'Settings') {
